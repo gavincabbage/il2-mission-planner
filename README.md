@@ -20,7 +20,7 @@ Interested in contributing to this tool? Feel free to fork the project and open 
 
 ## Development Setup
 
-Clone the repository. In the repository directory, run `npm install` followed by `bower install` to fetch dependencies. Then run `npm run develop` and navigate to the dist index file in a web browser (e.g. `file:///path/to/dist/index.html`) to access the site.
+Clone the repository. In the repository directory, run `npm ci` followed by `bower install` to fetch dependencies. Then run `npm run develop` and navigate to the dist index file in a web browser (e.g. `file:///path/to/dist/index.html`) to access the site.
 
 ## Contact
 

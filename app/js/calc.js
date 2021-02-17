@@ -2,7 +2,9 @@ module.exports = (function() {
 
     const
         SECONDS_IN_HOUR = 3600,
-        BORDER = 5
+        BORDER = 5,
+        MILE_PER_KM = 0.6213712,
+        KM_PER_MILE = 1.609344
     ;
 
     return {
@@ -72,6 +74,16 @@ module.exports = (function() {
 
         invertHeading: function(heading) {
             return (360 + (heading - 180)) % 360;
+        },
+
+        convertSpeed: function(value, units) {
+            var factor = units === 'metric' ? KM_PER_MILE : MILE_PER_KM;
+            return Math.round(value * factor);
+        },
+
+        convertDistance: function(value, units) {
+            var factor = units === 'metric' ? KM_PER_MILE : MILE_PER_KM;
+            return (value * factor).toFixed(1);
         },
     };
 })();

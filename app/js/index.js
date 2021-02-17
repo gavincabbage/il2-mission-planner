@@ -29,6 +29,7 @@
             drawControl, selectedMapIndex;
 
     var state = {
+        units: window.localStorage.getItem('units') || 'metric',
         colorsInverted: false,
         showBackground: true,
         streaming: false,
@@ -91,7 +92,8 @@
                         e.modal.hide();
                     } else {
                         var errorElement = document.getElementById('flight-leg-error');
-                        errorElement.innerHTML = 'Please input a valid speed in kilometers per hour.';
+                        var units = state.units === 'metric' ? 'kilometers' : 'miles';
+                        errorElement.innerHTML = 'Please input a valid speed in' + units + 'per hour.';
                         util.removeClass(errorElement, 'hidden-section');
                         errorElement.focus();
                     }
@@ -106,13 +108,18 @@
     function applyCustomFlightLegCallback(marker) {
         marker.options.time = util.formatTime(calc.time(marker.options.speed, marker.options.distance));
         var newContent = util.formatFlightLegMarker(
-                marker.options.distance, marker.options.heading, marker.options.speed, marker.options.time);
+                marker.options.distance, 
+                marker.options.heading, 
+                marker.options.speed, 
+                marker.options.time,
+                state.units
+            );
         marker.setIcon(icons.textIconFactory(newContent, 'flight-leg ' + getMapTextClasses(state)));
         publishMapState();
     }
 
     function applyFlightPlanCallback(route, newFlight) {
-        function routeClickHandlerFactory(clickedRoute) {
+        const routeClickHandlerFactory = function (clickedRoute) {
             return function() {
                 if (state.changing || state.connected) {
                     return;
@@ -120,15 +127,15 @@
                 deleteAssociatedLayers(L.layerGroup([clickedRoute]));
                 applyFlightPlan(clickedRoute);
             };
-        }
-        function markerClickHandlerFactory(clickedMarker) {
+        };
+        const markerClickHandlerFactory = function (clickedMarker) {
             return function() {
                 if (state.changing || state.connected) {
                     return;
                 }
                 applyCustomFlightLeg(clickedMarker);
             };
-        }
+        };
         if (newFlight) {
             route.on('click', routeClickHandlerFactory(route));
         }
@@ -145,7 +152,7 @@
             var heading = calc.heading(coords[i], coords[i+1]);
             var midpoint = calc.midpoint(coords[i], coords[i+1]);
             var time = util.formatTime(calc.time(route.speeds[i], distance));
-            var markerContent = util.formatFlightLegMarker(distance, heading, route.speeds[i], time);
+            var markerContent = util.formatFlightLegMarker(distance, heading, route.speeds[i], time, state.units);
             var marker =  L.marker(midpoint, {
                 distance: distance,
                 heading: heading,
@@ -350,6 +357,24 @@
         transferChildLayers(map, hiddenLayers);
     }
 
+    function changeUnits(units) {
+        state.units = units;
+        window.localStorage.setItem('units', units);
+        var parentChanged = false;
+        map.eachLayer(function (layer) {
+            if (layer.options && layer.options.speed) {
+                if (!parentChanged) {
+                    var parentRoute = drawnItems.getLayer(layer.parentId);
+                    parentRoute.speeds = parentRoute.speeds.map((speed) => calc.convertSpeed(speed, units));
+                    parentChanged = true;
+                }
+                layer.options.speed = calc.convertSpeed(layer.options.speed, units);
+                layer.options.distance = calc.convertDistance(layer.options.distance, units);
+                applyCustomFlightLegCallback(layer);
+            }
+        });
+    }
+
     function disableButtons(buttonList) {
         for (var i = 0; i < buttonList.length; i++) {
             var element = document.getElementById(buttonList[i]);
@@ -387,6 +412,7 @@
     function exportMapState() {
         var saveData = {
             mapHash: window.location.hash,
+            units: state.units,
             routes: [],
             points: []
         };
@@ -449,10 +475,10 @@
     function importMapState(saveData) {
         clearMap();
         var importedMapConfig = util.getSelectedMapConfig(saveData.mapHash, content.maps);
-        window.location.hash = importedMapConfig.hash;
         selectMap(importedMapConfig);
         mapConfig = importedMapConfig;
         selectedMapIndex = mapConfig.selectIndex;
+        state.units = saveData.units || 'imperial';
         if (saveData.routes) {
             for (var i = 0; i < saveData.routes.length; i++) {
                 var route = saveData.routes[i];
@@ -524,7 +550,6 @@
             }
         });
     }
-
 
     // if hash is not in map list, try to get json for that server
     if (window.location.hash !== '' && !util.isAvailableMapHash(window.location.hash, content.maps)) {
@@ -641,11 +666,18 @@
                             var mapSelect = document.getElementById('map-select');
                             mapSelect.selectedIndex = selectedMapIndex;
                             var originalIndex = selectedMapIndex;
+
                             var invertCheckbox = document.getElementById('invert-text-checkbox');
                             invertCheckbox.checked = state.colorsInverted;
+
+                            var unitsSelect = document.getElementById('units-select');
+                            var originalUnitValue = state.units;
+                            unitsSelect.value = originalUnitValue;
+
                             var backgroundCheckbox = document.getElementById('text-background-checkbox');
                             backgroundCheckbox.checked = state.showBackground;
                             mapSelect.focus();
+
                             L.DomEvent.on(e.modal._container.querySelector('.modal-ok'), 'click', function() {
                                 if (mapSelect.selectedIndex !== originalIndex) {
                                     var selectedMap = mapSelect.options[mapSelect.selectedIndex].value;
@@ -654,6 +686,10 @@
                                     selectedMapIndex = mapSelect.selectedIndex;
                                     publishMapState();
                                 }
+                                if (unitsSelect.value !== originalUnitValue) {
+                                    changeUnits(unitsSelect.value);
+                                }
+
                                 if (invertCheckbox.checked !== state.colorsInverted) {
                                     state.colorsInverted = invertCheckbox.checked;
                                     var textElements = document.getElementsByClassName('map-text');

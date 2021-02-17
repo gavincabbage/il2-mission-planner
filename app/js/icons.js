@@ -25,7 +25,7 @@ module.exports = function(leaflet) {
             return leaflet.divIcon({
                 className: classes,
                 html: text,
-                iconSize: [200, 0]
+                iconSize: [165, 0]
             });
         },
         // Private methods determine if this icon should default to blue when black is chosen

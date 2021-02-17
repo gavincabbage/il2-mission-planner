@@ -41,10 +41,15 @@ div.flight-leg {
 div.map-text {
     text-align: center;
     height: unset !important;
-    width: unset !important;
+    width: unset;
     color: #ffffff;
-    background: rgba(100, 100, 100, .5);
+    background: rgba(100, 100, 100, .75);
     padding: 0 5px;
+}
+
+div.flight-leg.map-text {
+    width: 158px;
+    text-align: left;
 }
 
 div.map-text.inverted {
@@ -161,7 +166,7 @@ img.modal-image {
 @media(max-width: 1600px) {
 
     div.flight-leg {
-        font-size: 1.0em;
+        font-size: 1.2em;
     }
 
 }

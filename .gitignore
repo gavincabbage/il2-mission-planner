@@ -10,4 +10,3 @@ sandbox/
 secrets/
 lambda/requests/
 .idea/
-package-lock.json

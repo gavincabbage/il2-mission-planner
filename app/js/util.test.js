@@ -152,16 +152,16 @@ describe('util', function() {
             assert.isDefined(util.formatFlightLegMarker);
         });
 
-        var expected = '[300.0km|116&deg;/296&deg;|300kph|60:00]';
+        var expected = '300.0km | 116&deg;/296&deg; <br/> 300kph | ETE 60:00';
         var given = {
             distance: 300,
             heading: 116,
             speed: 300,
             time: '60:00'
         }
-
+ 
         it('must return '+expected+' given '+given.distance+', '+given.heading+', '+given.speed+' and '+given.time, function() {
-            assert.strictEqual(util.formatFlightLegMarker(given.distance, given.heading, given.speed, given.time), expected);
+            assert.strictEqual(util.formatFlightLegMarker(given.distance, given.heading, given.speed, given.time, 'metric'), expected);
         });
     });
 

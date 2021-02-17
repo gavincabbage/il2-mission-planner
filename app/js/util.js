@@ -2,6 +2,17 @@ module.exports = (function() {
 
     var calc = require('./calc.js');
 
+    const UNIT_MAP = {
+        metric: {
+            distance: 'km',
+            speed: 'kph'
+        },
+        imperial: {
+            distance: 'mi',
+            speed: 'mph',
+        }
+    };
+
     return {
 
         formatTime: function(timeInSeconds) {
@@ -36,10 +47,15 @@ module.exports = (function() {
             return speedArray;
         },
 
-        formatFlightLegMarker: function(distance, heading, speed, time) {
+        formatFlightLegMarker: function(distance, heading, speed, time, units) {
+            units = units || 'metric';
             distance = typeof distance === 'number' ? distance.toFixed(1) : distance;
             heading = typeof heading === 'number' ? heading.toFixed(0) : heading;
-            return '[' + distance + 'km|' + calc.pad(heading, 3) + '&deg;/' + calc.pad(calc.invertHeading(heading), 3) +'&deg;|' + speed + 'kph|' + time + ']';
+            return  distance + UNIT_MAP[units].distance + ' | ' + 
+                calc.pad(heading, 3) + '&deg;/' + 
+                calc.pad(calc.invertHeading(heading), 3) +'&deg; <br/> ' + 
+                speed + UNIT_MAP[units].speed + ' | ' + 
+                'ETE ' + time;
         },
 
         isLine: function(layer) {
